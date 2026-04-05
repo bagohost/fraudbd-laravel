@@ -31,8 +31,7 @@
             </form>
         </div>
 
-        <div id="fraudbd-result-area" class="p-6 overflow-y-auto hidden flex-1 custom-scrollbar">
-            </div>
+        <div id="fraudbd-result-area" class="p-6 overflow-y-auto hidden flex-1 custom-scrollbar"></div>
 
         <div id="fraudbd-empty-state" class="p-10 flex flex-col items-center justify-center text-center flex-1">
             <div class="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center border border-gray-800 mb-4 shadow-inner">
@@ -118,8 +117,35 @@
         let hexColor = successRate >= 80 ? '#22c55e' : (successRate >= 50 ? '#eab308' : '#ef4444');
         if (data.trust_tier === 'Elite') { colorTheme = 'blue'; hexColor = '#3b82f6'; }
 
+        // Advice Box Logic
+        let adviceData = {};
+        if (data.advice) {
+            // If API sends advice directly
+            adviceData = { msg: data.advice, icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' };
+        } else if (data.trust_tier === 'Elite' || successRate >= 90) {
+            adviceData = { 
+                msg: 'এই কাস্টমারটি আমাদের সিস্টেমে এলিট হিসেবে চিহ্নিত। তবুও চূড়ান্ত সিদ্ধান্তের আগে নিজস্ব যাচাই করার পরামর্শ দেওয়া হচ্ছে।', 
+                icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' 
+            };
+        } else if (successRate >= 80) {
+            adviceData = { 
+                msg: 'কাস্টমারের ডেলিভারি সাকসেস রেট ভালো। সাধারণ প্রক্রিয়ায় অর্ডারটি সম্পন্ন করা যেতে পারে, তবে প্রয়োজনে নিজস্ব যাচাই রাখতে পারেন।', 
+                icon: 'M5 13l4 4L19 7' 
+            };
+        } else if (successRate >= 50) {
+            adviceData = { 
+                msg: 'অর্ডারটি প্রসেস করার আগে কাস্টমারের সাথে নিশ্চিত হওয়া এবং প্রয়োজনে আংশিক অগ্রিম নেওয়ার বিষয়টি বিবেচনা করতে পারেন।', 
+                icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' 
+            };
+        } else {
+            adviceData = { 
+                msg: 'ডেলিভারি সাকসেস রেট তুলনামূলক কম। অর্ডারটি প্রসেস করার আগে অতিরিক্ত যাচাই বা অগ্রিম নেওয়ার বিষয়টি গুরুত্ব সহকারে বিবেচনা করা উচিত।', 
+                icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' 
+            };
+        }
+
         let html = `
-            <div class="flex items-center justify-between gap-4 mb-6 bg-gray-900/50 p-5 rounded-2xl border border-gray-800">
+            <div class="flex items-center justify-between gap-4 mb-4 bg-gray-900/50 p-5 rounded-2xl border border-gray-800">
                 <div class="flex items-center gap-4">
                     <div class="w-14 h-14 bg-[#030712] rounded-full border border-${colorTheme}-500/50 flex items-center justify-center shadow-[0_0_15px_${hexColor}40]">
                         <svg class="w-7 h-7 text-${colorTheme}-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
@@ -132,6 +158,16 @@
                 <div class="text-center">
                     <div class="text-3xl font-black text-white">${successRate}<span class="text-sm text-gray-500">%</span></div>
                     <div class="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Trust Score</div>
+                </div>
+            </div>
+
+            <div class="mb-6 bg-${colorTheme}-500/10 border border-${colorTheme}-500/30 p-4 rounded-xl flex items-start gap-3">
+                <div class="text-${colorTheme}-400 shrink-0 mt-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${adviceData.icon}"></path></svg>
+                </div>
+                <div>
+                    <h4 class="text-[10px] uppercase tracking-widest text-${colorTheme}-500 font-bold mb-1">System Advice</h4>
+                    <p class="text-gray-300 text-sm leading-snug">${adviceData.msg}</p>
                 </div>
             </div>
 
@@ -154,15 +190,16 @@
         // Courier Breakdown Section
         if (couriers.length > 0) {
             html += `<div class="mt-2 border-t border-gray-800 pt-5">
-                        <h4 class="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-3"><i class="fas fa-truck mr-1"></i> Courier Breakdown</h4>
+                        <h4 class="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-3 flex items-center"><svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg> Courier Breakdown</h4>
                         <div class="space-y-2">`;
             
             couriers.forEach(c => {
                 let returnCount = (parseInt(c.returned) || 0) + (parseInt(c.cancelled) || 0);
+                let perfColor = c.performance >= 80 ? 'bg-green-500' : (c.performance >= 50 ? 'bg-yellow-500' : 'bg-red-500');
                 html += `
                     <div class="bg-[#030712] p-3.5 rounded-xl border border-gray-800 flex justify-between items-center hover:border-[#00f0ff]/30 transition-colors">
                         <div class="text-gray-300 text-sm font-bold flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full ${c.performance >= 80 ? 'bg-green-500' : (c.performance >= 50 ? 'bg-yellow-500' : 'bg-red-500')}"></span>
+                            <span class="w-2 h-2 rounded-full ${perfColor} shadow-[0_0_5px_currentColor]"></span>
                             ${c.courier}
                         </div>
                         <div class="flex gap-4 text-xs font-mono">
