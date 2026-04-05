@@ -8,11 +8,14 @@ class FraudBd
 {
     protected function getHeaders()
     {
+        $siteUrl = url('/');
         return [
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
             'RKR-API-KEY' => config('fraudbd.api_key'),
             'RKR-SECRET-KEY' => config('fraudbd.secret_key'),
+            'Origin' => $siteUrl,
+            'Referer' => $siteUrl
         ];
     }
 
