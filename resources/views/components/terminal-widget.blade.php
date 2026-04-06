@@ -117,29 +117,40 @@
         let hexColor = successRate >= 80 ? '#22c55e' : (successRate >= 50 ? '#eab308' : '#ef4444');
         if (data.trust_tier === 'Elite') { colorTheme = 'blue'; hexColor = '#3b82f6'; }
 
-        // Advice Box Logic
+        // FIXED Advice Box Logic: Handle if advice is an object or a string
         let adviceData = {};
+        let apiAdviceMsg = null;
+        
+        // Extract advice text safely
         if (data.advice) {
-            // If API sends advice directly
-            adviceData = { msg: data.advice, icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' };
+            if (typeof data.advice === 'string') {
+                apiAdviceMsg = data.advice;
+            } else if (typeof data.advice === 'object' && data.advice.message) {
+                 // Assuming the object might have a 'message' or 'text' property. Adjust if needed.
+                apiAdviceMsg = data.advice.message || data.advice.text || JSON.stringify(data.advice);
+            }
+        }
+
+        if (apiAdviceMsg && apiAdviceMsg !== '[object Object]') {
+            adviceData = { msg: apiAdviceMsg, icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' };
         } else if (data.trust_tier === 'Elite' || successRate >= 90) {
             adviceData = { 
-                msg: 'এই কাস্টমারটি আমাদের সিস্টেমে এলিট হিসেবে চিহ্নিত। তবুও চূড়ান্ত সিদ্ধান্তের আগে নিজস্ব যাচাই করার পরামর্শ দেওয়া হচ্ছে।', 
+                msg: 'এই কাস্টমারটি আমাদের সিস্টেমে এলিট হিসেবে চিহ্নিত। তবুও চূড়ান্ত সিদ্ধান্তের আগে নিজস্ব যাচাই করার পরামর্শ দেওয়া হচ্ছে।', 
                 icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' 
             };
         } else if (successRate >= 80) {
             adviceData = { 
-                msg: 'কাস্টমারের ডেলিভারি সাকসেস রেট ভালো। সাধারণ প্রক্রিয়ায় অর্ডারটি সম্পন্ন করা যেতে পারে, তবে প্রয়োজনে নিজস্ব যাচাই রাখতে পারেন।', 
+                msg: 'কাস্টমারের ডেলিভারি সাকসেস রেট ভালো। সাধারণ প্রক্রিয়ায় অর্ডারটি সম্পন্ন করা যেতে পারে, তবে প্রয়োজনে নিজস্ব যাচাই রাখতে পারেন।', 
                 icon: 'M5 13l4 4L19 7' 
             };
         } else if (successRate >= 50) {
             adviceData = { 
-                msg: 'অর্ডারটি প্রসেস করার আগে কাস্টমারের সাথে নিশ্চিত হওয়া এবং প্রয়োজনে আংশিক অগ্রিম নেওয়ার বিষয়টি বিবেচনা করতে পারেন।', 
+                msg: 'অর্ডারটি প্রসেস করার আগে কাস্টমারের সাথে নিশ্চিত হওয়া এবং প্রয়োজনে আংশিক অগ্রিম নেওয়ার বিষয়টি বিবেচনা করতে পারেন।', 
                 icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' 
             };
         } else {
             adviceData = { 
-                msg: 'ডেলিভারি সাকসেস রেট তুলনামূলক কম। অর্ডারটি প্রসেস করার আগে অতিরিক্ত যাচাই বা অগ্রিম নেওয়ার বিষয়টি গুরুত্ব সহকারে বিবেচনা করা উচিত।', 
+                msg: 'ডেলিভারি সাকসেস রেট তুলনামূলক কম। অর্ডারটি প্রসেস করার আগে অতিরিক্ত যাচাই বা অগ্রিম নেওয়ার বিষয়টি গুরুত্ব সহকারে বিবেচনা করা উচিত।', 
                 icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' 
             };
         }
@@ -187,7 +198,6 @@
             </div>
         `;
 
-        // Courier Breakdown Section
         if (couriers.length > 0) {
             html += `<div class="mt-2 border-t border-gray-800 pt-5">
                         <h4 class="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-3 flex items-center"><svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg> Courier Breakdown</h4>
